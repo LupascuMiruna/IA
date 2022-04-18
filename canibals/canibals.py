@@ -39,6 +39,7 @@ class CrossingNode:
     #     return len(path)
 
     def inPath(self, infoNewNode): #the label of the node to check
+
         path = self.getPath()
         for node in path:
             if node.info == infoNewNode:
