@@ -329,13 +329,13 @@ class Graph:
             for nrGoatsBoat in range(maxGoatsBoat + 1):
                 if nrCabbagesBoat == 0 and nrGoatsBoat == 0:
                     maxWolvesBoat = min(wolvesCurrentShore, Graph.A + Graph.B)
-                elif (nrGoatsBoat > 0 and nrCabbagesBoat > 0) or (nrGoatsBoat >= Graph.A and nrGoatsBoat >= Graph.B) or (nrCabbagesBoat >= Graph.A and nrGoatsBoat >= Graph.B): #both compartments have obj
+                elif (nrGoatsBoat > 0 and nrCabbagesBoat > 0) or (nrGoatsBoat >= Graph.A and nrGoatsBoat >= Graph.B) or (nrCabbagesBoat >= Graph.A and nrCabbagesBoat >= Graph.B): #both compartments have obj
                     maxWolvesBoat = 0
                 elif nrCabbagesBoat == 0 and nrGoatsBoat > 0:
                     if nrGoatsBoat <= Graph.A:
                         maxWolvesBoat = min(wolvesCurrentShore, Graph.B)
                     else:
-                        maxWolvesBoat = min(wolvesCurrentShore, Graph.A)
+                        maxWolvesBoat = min(wolvesCurrentShore, Graph.A)s
                 elif nrCabbagesBoat > 0 and nrGoatsBoat == 0:
                     if nrCabbagesBoat <= Graph.A:
                         maxWolvesBoat = min(wolvesCurrentShore, Graph.B)
