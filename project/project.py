@@ -4,6 +4,7 @@
 # 14 7 1 === final state cabbages, goats wolves
 
 #state (final shore, inital shore, location boat, nothing in containers)
+import math
 
 class CrossingNode:
     gr = None
@@ -11,6 +12,7 @@ class CrossingNode:
         self.info = info
         self.parent = parent
         self.g = g #the cost until this node
+        self.h = h
         self.f = g + h #h is estimation until final node
 
     def getPath(self):
@@ -58,7 +60,7 @@ class CrossingNode:
             self.gr.initialShore,
             self.info["cabbagesEst"], self.info["goatsEst"], self.info["wolvesEst"], boatInitialShore,
             self.gr.finalShore, self.info["cabbagesWest"], self.info["goatsWest"], self.info["wolvesWest"],
-            self.info["cabbagesStored"], self.info["goatsStored"], self.info["wolvesStored"], boatFinalShore)
+            self.info["cabbagesStored"], self.info["goatsStored"], self.info["wolvesStored"], boatFinalShore) + " f: {} g: {} h: {}".format(self.f, self.g, self.h)
 
     def __repr__(self):
         result = ""
@@ -130,10 +132,21 @@ class Graph:
         return 1 #it might be possible to reache the output desired
 
     def calculateHNode(self, infoNewNode, euristic, currentNode):
-        if euristic == "basic":
-            if self.ifScope(infoNewNode):
-                return 0
-            return 1
+        # if euristic == "basic":
+        #     if self.ifScope(infoNewNode):
+        #         return 0
+        #     return 1
+        # if currentNode == None:
+        #     return 0
+
+        # return 2 * math.ceil(((self.finalCabbages - infoNewNode["cabbagesWest"] - infoNewNode["cabbagesStored"]) + (
+        #         self.finalGoats - infoNewNode["goatsWest"] - infoNewNode["goatsStored"]) + (self.finalWolves - infoNewNode["wolvesWest"] - infoNewNode["wolvesStored"])) /
+        #                      (self.A + self.B)) + (1 - infoNewNode["boat"]) - 1
+        cabbagesToTransport = max(0, self.finalCabbages - infoNewNode["cabbagesWest"] - infoNewNode["cabbagesStored"])
+        goatsToTransport = max(0, self.finalGoats - infoNewNode["goatsWest"] - infoNewNode["goatsStored"])
+        wolvesToTransport = max(0, self.finalWolves - infoNewNode["wolvesWest"] - infoNewNode["wolvesStored"])
+        return cabbagesToTransport + goatsToTransport + wolvesToTransport
+
 
     def ifScope(self, infoNode):
         return infoNode["cabbagesWest"] + infoNode["cabbagesStored"] >= self.finalCabbages and \
@@ -142,8 +155,49 @@ class Graph:
 
     def generateSuccessors(self, currentNode, euristic = "basic"): #generates a list of nodes
         #current Shore = shore with boat; opposite shore = without boat
-        def getCostSucc(cabbagesA, goatsA, wolvesA, cabbagesB, goatsB, wolvesB, boat):
-            return 1
+        # def getCostSucc(cabbagesA, goatsA, wolvesA, cabbagesB, goatsB, wolvesB, boat):
+        #     return 1
+        def getCostSucc(verzeA, capreA, lupiA, verzeB, capreB, lupiB, barca):
+            costSuccesor = 0
+            if verzeA == 0 and verzeB == 0 and capreA == 0 and capreB == 0 and lupiA == 0 and lupiB == 0 and barca == 1:
+                return 50
+            elif verzeA == 0 and verzeB == 0 and capreA == 0 and capreB == 0 and lupiA == 0 and lupiB == 0 and barca == 0:
+                return 0
+
+            if verzeA and verzeB and barca == 1:
+                return 50 - verzeA + (verzeB / 2) * 1.5
+            elif verzeA and verzeB and barca == 0:
+                return 50 + verzeA + (verzeB / 2) * 1.5
+
+            if capreA and capreB and barca == 1:
+                return 50 - capreA * 2 + (capreB / 2) * 3
+            elif capreA and capreB and barca == 0:
+                return 50 + capreA * 2 + (capreB / 2) * 3
+
+            if lupiA and lupiB and barca == 1:
+                return 50 - lupiA * 3 + (lupiB / 2) * 4.5
+            elif lupiA and lupiB and barca == 0:
+                return 50 + lupiA * 3 + (lupiB / 2) * 4.5
+
+            if verzeA:
+                costSuccesor += verzeA
+            elif capreA:
+                costSuccesor += capreA * 2
+            elif lupiA:
+                costSuccesor += lupiA * 3
+
+            # pt compB
+            if verzeB:
+                costSuccesor += verzeB * 1.5
+            elif capreB:
+                costSuccesor += capreB * 3
+            elif lupiB:
+                costSuccesor += lupiB * 4.5
+
+            if barca == 1:
+                return 50 - costSuccesor
+            else:
+                return 50 + costSuccesor
         
         def areEnoughProducts(info):
             #for cabbages
@@ -335,7 +389,7 @@ class Graph:
                     if nrGoatsBoat <= Graph.A:
                         maxWolvesBoat = min(wolvesCurrentShore, Graph.B)
                     else:
-                        maxWolvesBoat = min(wolvesCurrentShore, Graph.A)s
+                        maxWolvesBoat = min(wolvesCurrentShore, Graph.A)
                 elif nrCabbagesBoat > 0 and nrGoatsBoat == 0:
                     if nrCabbagesBoat <= Graph.A:
                         maxWolvesBoat = min(wolvesCurrentShore, Graph.B)
@@ -392,7 +446,7 @@ def a_star(gr, nrSearchedSolutions, euristic):
 
     while len(queue) > 0:
         currentNode = queue.pop(0)
-        #print(currentNode)
+        print(currentNode)
         if gr.ifScope(currentNode.info):
             print("Solution: ")
             currentNode.printPath(printCost = True, printLength = True)
@@ -414,6 +468,54 @@ def a_star(gr, nrSearchedSolutions, euristic):
                 queue.insert(i, succesor)
             else:
                 queue.append(succesor)
+
+def astarOptimized(gr, euristic):
+    startNode = CrossingNode(gr.start, None, 0, gr.calculateHNode(gr.start, euristic, None))
+
+    lopen = [startNode]
+    lclose = []
+    while len(lopen) > 0:
+        currentNode = lopen.pop(0)
+        lclose.append(currentNode)
+        print(currentNode)
+
+        if gr.ifScope(currentNode.info):
+            print("Solution:")
+            print(currentNode.getPath())
+            #-1
+            #00->return
+            return
+        successors = gr.generateSuccessors(currentNode)
+        for successor in successors:
+            foundOpen = False
+            for node in lopen:
+                if node.info == successor.info:
+                    foundOpen = True
+                    if successor.f < node.f: #will eliminiate from open and then add the current node in open
+                        lopen.remove(node)
+                    else:
+                        successors.remove(successor)
+                    break
+            if foundOpen == False: #will search it in lclose
+                for node in lclose:
+                    if successor.info == node.info:
+                        if successor.f < node.f:
+                            lclose.remove(node)
+                        else:
+                            successors.remove(successor)
+                        break
+            for successor in successors: # add them in lopen as we keep the order --> order ascendinf f && desc g
+                foundPlace = False
+
+                for place in range(len(lopen)):
+                    if lopen[place].f > successor.f or (lopen[place].f == successor.f and lopen[place].g <= successor.g):
+                        foundPlace = True
+                        break
+                if foundPlace == True:
+                    lopen.insert(place, successor)
+
+                else:
+                    lopen.append(successor)
 
 # gr = Graph("input.txt")
 # CrossingNode.gr = gr
@@ -451,13 +553,20 @@ def a_star(gr, nrSearchedSolutions, euristic):
 # finalCabbages = int(final[0])
 # finalGoats = int(final[1])
 # finalWolves = int(final[2])
-gr = Graph("input.txt")
-CrossingNode.gr = gr
-nrSearchedSolution = 3
-a_star(gr, nrSearchedSolutions = nrSearchedSolution, euristic = "basic")
+
 # startNode = CrossingNode(gr.start, None, 0, gr.calculateHNode(gr.start, "basic", None))
 # print(startNode)
 # path = gr.generateSuccessors(startNode)
 
 # path = gr.generateSuccessors(succesor)
 # print(len(path))
+
+# gr = Graph("input.txt")
+# CrossingNode.gr = gr
+# nrSearchedSolution = 3
+# a_star(gr, nrSearchedSolutions = nrSearchedSolution, euristic = "basic")
+
+gr = Graph("input.txt")
+CrossingNode.gr = gr
+nrSearchedSolution = 3
+astarOptimized(gr, euristic = "basic")
