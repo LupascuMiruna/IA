@@ -420,7 +420,7 @@ class Graph:
                     elif nrCabbagesBoat > Graph.A: #JUST 1 ELEM ---> first of all fill A
                         generateCombinationsStore(Graph.A, nrCabbagesBoat - Graph.A, 0, 0, 0, 0, currentNode, euristic)
                     elif nrCabbagesBoat > 0:
-                        generateCombinationsStore(Graph.A, 0, 0, 0, 0, 0, currentNode, euristic)
+                        generateCombinationsStore(nrCabbagesBoat, 0, 0, 0, 0, 0, currentNode, euristic)
 
                     elif nrGoatsBoat > Graph.A: #JUST 1 ELEM ---> first of all fill A
                         generateCombinationsStore(0, 0, Graph.A, nrGoatsBoat- Graph.A, 0, 0, currentNode, euristic)
